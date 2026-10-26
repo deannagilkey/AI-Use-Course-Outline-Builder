@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Use Course Outline Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Official Pitt brand colors: Royal #003594, Gold #FFB81C, Medium Blue #00205B,
+       accent green #00AD6E, accent dark red #770538 (brand.pitt.edu/brand-elements/color-palettes) */
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-sunken: #F0F2F5;
+    --ink: #161B22;
+    --ink-muted: #5B6472;
+    --border: #DEE2E8;
+    --navy: #003594;       /* Pitt Royal */
+    --navy-ink: #00205B;   /* Pitt Medium Blue */
+    --gold: #FFB81C;       /* Pitt Gold — backgrounds, dots, borders */
+    --gold-text: #8A5A00;  /* readable amber for gold used as text on light bg */
+    --gold-soft: #FBF1DE;
+    --red: #770538;        /* Pitt accent dark red */
+    --red-soft: #FBEAE7;
+    --green: #00AD6E;      /* Pitt accent green — backgrounds, dots, borders */
+    --green-text: #1B7A4A; /* readable green for text on light bg */
+    --green-soft: #E7F2EC;
+    --teal: #00205B;       /* tertiary accent, reuses Pitt Medium Blue */
+    --teal-soft: #E6EEF7;
+    --focus: #1C6FD1;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E131B; --surface: #161D29; --surface-sunken: #11161F;
+      --ink: #E7ECF3; --ink-muted: #94A0B2; --border: #2A3444;
+      --navy: #66B2E3; --navy-ink: #D7E3F6; --gold: #E3B04F; --gold-text: #E3B04F; --gold-soft: #2A2415;
+      --red: #E08575; --red-soft: #2C1A18; --green: #7FBE9D; --green-text: #7FBE9D; --green-soft: #16261F;
+      --teal: #8FB4D9; --teal-soft: #11202E; --focus: #6AA6F0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5; padding: 0 0 4rem;
+  }
+  .page { max-width: 1320px; margin: 0 auto; padding: 1.75rem 1.5rem 0; }
+
+  header.top {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+  }
+  header.top .eyebrow { font-size: 0.8rem; font-weight: 600; color: var(--gold-text); margin: 0 0 0.3rem; }
+  header.top h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 1.75rem; margin: 0; }
+  header.top p.sub { margin: 0.4rem 0 0; color: var(--ink-muted); font-size: 0.92rem; max-width: 52ch; }
+  .top-actions { display: flex; gap: 0.55rem; flex-wrap: wrap; }
+  .ghost-btn {
+    background: none; border: 1px solid var(--border); color: var(--ink-muted);
+    border-radius: 7px; padding: 0.5rem 0.85rem; font-size: 0.82rem; font-family: inherit; cursor: pointer;
+  }
+  .ghost-btn:hover { border-color: var(--navy); color: var(--navy); }
+  .ghost-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+  .course-row {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1rem 1.3rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap;
+  }
+  .course-row label { font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); white-space: nowrap; }
+  .course-row input { flex: 1; min-width: 200px; }
+  .course-row select {
+    font-family: inherit; font-size: 0.9rem; color: var(--ink); background: var(--surface-sunken);
+    border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.6rem; min-width: 170px; max-width: 260px;
+  }
+  .course-row select:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .course-row .divider { width: 1px; align-self: stretch; background: var(--border); margin: 0 0.1rem; }
+
+  .purpose {
+    background: var(--teal-soft); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.1rem 1.4rem; margin-bottom: 1.25rem;
+  }
+  .purpose h2 {
+    font-family: 'Source Serif 4', Georgia, serif; font-size: 1rem; font-weight: 600;
+    margin: 0 0 0.45rem; color: var(--navy);
+  }
+  .purpose p {
+    margin: 0; font-size: 0.9rem; color: var(--ink); max-width: 80ch; line-height: 1.55;
+  }
+  .purpose p + p { margin-top: 0.5rem; }
+
+  .save-note {
+    background: var(--gold-soft); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1rem 1.4rem; margin-bottom: 1.25rem;
+  }
+  .save-note h2 {
+    font-family: 'Source Serif 4', Georgia, serif; font-size: 0.95rem; font-weight: 600;
+    margin: 0 0 0.5rem; color: var(--navy);
+  }
+  .save-note ul { margin: 0; padding-left: 1.2rem; font-size: 0.87rem; color: var(--ink); line-height: 1.55; }
+  .save-note li + li { margin-top: 0.3rem; }
+  .save-note strong { color: var(--navy); }
+
+  .field-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 0.4rem; }
+  input[type="text"], textarea {
+    width: 100%; font-family: inherit; font-size: 0.95rem; color: var(--ink);
+    background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 8px; padding: 0.55rem 0.7rem;
+  }
+  input[type="text"]:focus, textarea:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+  textarea { resize: vertical; min-height: 4.2rem; line-height: 1.45; }
+
+  .layout { display: grid; grid-template-columns: 250px minmax(0,1fr) 340px; gap: 1.5rem; align-items: start; }
+  @media (max-width: 1150px) { .layout { grid-template-columns: 1fr; } }
+
+  /* ---- Assignment list (left) ---- */
+  .list-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.1rem; position: sticky; top: 1.25rem; max-height: calc(100vh - 2.5rem); overflow-y: auto;
+  }
+  @media (max-width: 1150px) { .list-panel { position: static; max-height: none; } }
+  .list-panel h2 { font-size: 0.95rem; margin: 0 0 0.2rem; font-family: 'Source Serif 4', Georgia, serif; }
+  .list-count { font-size: 0.76rem; color: var(--ink-muted); margin: 0 0 0.9rem; }
+  .add-btn {
+    width: 100%; background: var(--navy); color: #fff; border: none; border-radius: 8px;
+    padding: 0.6rem; font-weight: 600; font-size: 0.86rem; cursor: pointer; margin-bottom: 0.9rem; font-family: inherit;
+  }
+  .add-btn:hover { filter: brightness(1.1); }
+  .assign-item {
+    border: 1.5px solid var(--border); border-radius: 9px; padding: 0.6rem 0.7rem; margin-bottom: 0.5rem;
+    cursor: pointer; background: var(--surface-sunken); transition: border-color 0.12s;
+  }
+  .assign-item:hover { border-color: var(--navy); }
+  .assign-item.active { border-color: var(--navy); background: var(--surface); box-shadow: 0 0 0 1px var(--navy) inset; }
+  .assign-item .name { font-size: 0.87rem; font-weight: 600; display: block; margin-bottom: 0.25rem; }
+  .assign-item .meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.73rem; color: var(--ink-muted); }
+  .assign-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .assign-item .row2 { display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; }
+  .assign-item .reorder { display: flex; gap: 0.2rem; }
+  .assign-item .reorder button, .assign-item .del-btn {
+    background: none; border: none; cursor: pointer; color: var(--ink-muted); font-size: 0.78rem; padding: 0.1rem 0.3rem;
+  }
+  .assign-item .reorder button:hover, .assign-item .del-btn:hover { color: var(--red); }
+  .empty-list { font-size: 0.82rem; color: var(--ink-muted); font-style: italic; padding: 0.5rem 0.1rem; }
+  .storage-banner {
+    font-size: 0.74rem; color: var(--gold-text); background: var(--gold-soft); border-radius: 7px;
+    padding: 0.5rem 0.6rem; margin-top: 0.8rem; line-height: 1.4; display: none;
+  }
+  .storage-banner.show { display: block; }
+
+  /* ---- Form (middle) ---- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.3rem 1.4rem 1.5rem; margin-bottom: 1.1rem;
+  }
+  .card-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.3rem; }
+  .card-num { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 1.02rem; color: var(--navy); flex-shrink: 0; }
+  .card-head h2 { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.08rem; font-weight: 600; margin: 0; }
+  .card-head .req { font-size: 0.7rem; font-weight: 600; color: var(--red); background: var(--red-soft); padding: 0.14rem 0.48rem; border-radius: 20px; margin-left: auto; }
+  .card-sub { color: var(--ink-muted); font-size: 0.86rem; margin: 0.2rem 0 0.9rem; }
+
+  .form-head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .form-head-row .editing-tag { font-size: 0.78rem; color: var(--ink-muted); }
+  .form-head-row .editing-tag strong { color: var(--navy); }
+
+  .badge-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; }
+  @media (max-width: 700px) { .badge-grid { grid-template-columns: repeat(2, 1fr); } }
+  .badge-option input { position: absolute; opacity: 0; pointer-events: none; }
+  .badge-option label { display: block; cursor: pointer; border: 1.5px solid var(--border); border-radius: 10px; padding: 0.7rem 0.65rem; background: var(--surface-sunken); }
+  .badge-option .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; margin-right: 0.4rem; vertical-align: middle; }
+  .badge-option .name { font-weight: 600; font-size: 0.88rem; vertical-align: middle; }
+  .badge-option .desc { display: block; font-size: 0.76rem; color: var(--ink-muted); margin-top: 0.3rem; }
+  .badge-option input:checked + label { border-color: var(--chip-color, var(--navy)); background: var(--chip-soft, var(--surface)); box-shadow: 0 0 0 1px var(--chip-color, var(--navy)) inset; }
+  .badge-option input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .badge-option[data-key="required"] { --chip-color: var(--navy); --chip-soft: #E8EEF8; }
+  .badge-option[data-key="permitted"] { --chip-color: var(--green); --chip-soft: var(--green-soft); }
+  .badge-option[data-key="restricted"] { --chip-color: var(--gold); --chip-soft: var(--gold-soft); }
+  .badge-option[data-key="prohibited"] { --chip-color: var(--red); --chip-soft: var(--red-soft); }
+  @media (prefers-color-scheme: dark) { .badge-option[data-key="required"] { --chip-soft: #16233B; } }
+
+  .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+  .pill-option input { position: absolute; opacity: 0; pointer-events: none; }
+  .pill-option label { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; border: 1.5px solid var(--border); border-radius: 20px; padding: 0.42rem 0.85rem; font-size: 0.84rem; background: var(--surface-sunken); }
+  .pill-option input:checked + label { border-color: var(--navy); background: var(--navy); color: #fff; }
+  .pill-option input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .lane-hint {
+    margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);
+    font-size: 0.85rem; color: var(--ink-muted); display: none;
+  }
+  .lane-hint.show { display: block; }
+  .lane-hint strong { color: var(--navy); }
+
+  .check-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1rem; }
+  @media (max-width: 560px) { .check-grid { grid-template-columns: 1fr; } }
+  .check-option { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.87rem; cursor: pointer; padding: 0.25rem 0.1rem; }
+  .check-option input { margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--navy); flex-shrink: 0; }
+
+  .other-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.65rem; }
+  .other-row input[type="text"] { flex: 1; }
+
+  .menu-wrap, .level-wrap { overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.25s ease, opacity 0.2s ease; }
+  .menu-wrap.open, .level-wrap.open { max-height: 600px; opacity: 1; margin-top: 1.05rem; padding-top: 1.05rem; border-top: 1px dashed var(--border); }
+
+  .template-btn { font-size: 0.76rem; font-weight: 600; color: var(--teal); background: var(--teal-soft); border: none; border-radius: 6px; padding: 0.28rem 0.55rem; cursor: pointer; margin-left: 0.5rem; }
+  .template-btn:hover { filter: brightness(0.95); }
+
+  .form-actions {
+    position: sticky; bottom: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 0.9rem 1.2rem; display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-top: 0.3rem;
+  }
+  .save-btn { background: var(--gold); color: #2B2008; border: none; border-radius: 8px; padding: 0.6rem 1.3rem; font-weight: 700; font-size: 0.88rem; cursor: pointer; font-family: inherit; }
+  .save-btn:hover { filter: brightness(1.05); }
+  .save-status { font-size: 0.78rem; color: var(--ink-muted); }
+  .save-status.ok { color: var(--green-text); }
+  .save-status.err { color: var(--red); }
+
+  /* ---- Preview (right) ---- */
+  .preview { position: sticky; top: 1.25rem; background: var(--navy); border-radius: 14px; padding: 1.3rem 1.3rem 1.2rem; color: #fff; }
+  @media (prefers-color-scheme: dark) { .preview { background: #18233A; } }
+  @media (max-width: 1150px) { .preview { position: static; } }
+  .tabs { display: flex; gap: 0.4rem; margin-bottom: 0.9rem; }
+  .tabs button {
+    flex: 1; background: rgba(255,255,255,0.08); border: none; color: #C3CEE3; font-family: inherit;
+    font-size: 0.8rem; font-weight: 600; padding: 0.5rem 0.4rem; border-radius: 7px; cursor: pointer;
+  }
+  .tabs button.active { background: #fff; color: var(--navy); }
+  .preview-body {
+    background: rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem 1.05rem; font-size: 0.85rem;
+    line-height: 1.55; white-space: pre-wrap; color: #EDF1F8; max-height: 55vh; overflow-y: auto;
+  }
+  .preview-body .ph { color: #8FA3C7; font-style: italic; }
+  .preview-actions { display: flex; gap: 0.55rem; margin-top: 1rem; }
+  .preview-actions button { flex: 1; font-family: inherit; font-size: 0.83rem; font-weight: 600; border-radius: 8px; padding: 0.58rem 0.4rem; cursor: pointer; border: none; }
+  #copyBtn { background: var(--gold); color: #2B2008; }
+  #copyBtn:hover { filter: brightness(1.05); }
+  #printBtn { background: rgba(255,255,255,0.12); color: #fff; }
+  #printBtn:hover { background: rgba(255,255,255,0.2); }
+  .copied-msg { font-size: 0.76rem; color: #B9E3C6; margin-top: 0.5rem; height: 1rem; }
+
+  footer.note { max-width: 1320px; margin: 2rem auto 0; padding: 0 1.5rem; font-size: 0.78rem; color: var(--ink-muted); }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .page { max-width: 100%; padding: 0; }
+    .layout { grid-template-columns: 1fr; }
+    .list-panel, .form-actions, header.top .top-actions, .course-row, .purpose, .save-note { display: none !important; }
+    .card { border: 1px solid #bbb; break-inside: avoid; }
+    .preview { position: static; background: #fff; color: #000; border: 1px solid #bbb; }
+    .tabs, .preview-actions { display: none !important; }
+    .preview-body { background: #f4f4f4; color: #000; max-height: none; overflow: visible; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="top">
+    <div>
+      <p class="eyebrow">Course Outline Module — AI Use Section</p>
+      <h1>AI Use Course Outline Builder</h1>
+      <p class="sub">Switch courses above, then fill in one assignment at a time. Each save adds it to that course's outline, and everything is kept between visits.</p>
+    </div>
+    <div class="top-actions">
+      <button class="ghost-btn" id="exportBtn" type="button">Export JSON</button>
+      <button class="ghost-btn" id="importBtn" type="button">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+      <button class="ghost-btn danger" id="resetAllBtn" type="button">Clear everything</button>
+    </div>
+  </header>
+
+  <div class="purpose">
+    <h2>Purpose</h2>
+    <p>Ambiguity about AI is the thing most likely to produce unfair outcomes and bad-faith arguments — some students guess conservatively and lose out, others exploit the gray area. This form exists to close that gap <em>before</em> an assignment goes out, by forcing a clear, written answer to three questions for every assignment: is AI allowed, required, or restricted here; why; and how will students actually be told.</p>
+    <p>Each saved assignment becomes part of a standing record for the course — reusable term to term, consistent across sections, and easy to hand to a co-instructor, a TA, or a program reviewer.</p>
+  </div>
+
+  <div class="save-note">
+    <h2>Saving &amp; sharing — how this actually works</h2>
+    <ul>
+      <li><strong>This tool works best opened in Claude</strong> (claude.ai or the Claude app) — that's what powers the autosave below. Keep working from there if you want your outline to just be there every time you come back, with nothing to remember to do.</li>
+      <li><strong>Autosave</strong> keeps every course and assignment while you're working in Claude — close it and reopen it later, and everything is still there, with no export/import step required.</li>
+      <li><strong>Opened elsewhere</strong> — a plain browser tab, GitHub Pages, or anywhere outside Claude — autosave won't carry data between sessions — a banner on the left will tell you if that's happening. In that case, click <strong>Export JSON</strong> before you close the tab, and <strong>Import JSON</strong> when you come back.</li>
+      <li><strong>To share your work or back it up</strong>, click <strong>Export JSON</strong> — it saves every course and assignment into one file you can email, store, or hand to a co-instructor. Send that file along with this tool if the other person needs to open it.</li>
+      <li><strong>Importing a JSON file replaces everything currently here</strong> — export your current work first if you're not sure you want to lose it.</li>
+    </ul>
+  </div>
+
+  <div class="course-row">
+    <label for="courseSelect">Course</label>
+    <select id="courseSelect"></select>
+    <div class="divider"></div>
+    <label for="courseName">Name</label>
+    <input type="text" id="courseName" placeholder="e.g., WRIT 1200 — Argument &amp; Research">
+    <button class="ghost-btn" id="addCourseBtn" type="button">+ New course</button>
+    <button class="ghost-btn danger" id="deleteCourseBtn" type="button">Delete this course</button>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT: assignment list -->
+    <aside class="list-panel">
+      <h2>Assignments</h2>
+      <p class="list-count" id="listCount">Loading…</p>
+      <button class="add-btn" id="addBtn" type="button">+ Add assignment</button>
+      <div id="assignList"></div>
+      <div class="storage-banner" id="storageBanner">
+        Autosave isn't available in this view. Use <strong>Export JSON</strong> to keep a backup, and <strong>Import JSON</strong> to restore it later.
+      </div>
+    </aside>
+
+    <!-- MIDDLE: form -->
+    <main>
+      <div class="form-head-row">
+        <span class="editing-tag" id="editingTag">Adding a new assignment</span>
+      </div>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">—</span><h2>Assignment name</h2><span class="req">Required</span></div>
+        <input type="text" id="assignName" placeholder="e.g., Source Synthesis Memo">
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">1</span><h2>Lane</h2></div>
+        <p class="card-sub">Danny Liu's two-lane model — decide the assessment conditions before anything else.</p>
+        <div class="pill-row" id="laneGroup">
+          <div class="pill-option"><input type="radio" name="lane" id="lane-1" value="Lane 1 — Secure / Unaided"><label for="lane-1">Lane 1 — Secure / Unaided</label></div>
+          <div class="pill-option"><input type="radio" name="lane" id="lane-2" value="Lane 2 — AI-Enabled"><label for="lane-2">Lane 2 — AI-Enabled</label></div>
+        </div>
+        <div class="lane-hint" id="laneHint1">Lane 1 tasks run under controlled conditions (in-class, invigilated, oral) and are typically badged <strong>Prohibited</strong> below.</div>
+        <div class="lane-hint" id="laneHint2">Lane 2 tasks are open and disclosed. Don't forget to fill in <strong>the menu</strong> (Section 5) with the specific moves this task allows.</div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">2</span><h2>Status</h2><span class="req">Required</span></div>
+        <p class="card-sub">Choose one badge for this assignment.</p>
+        <div class="badge-grid" id="statusGroup">
+          <div class="badge-option" data-key="required">
+            <input type="radio" name="status" id="status-required" value="Required">
+            <label for="status-required"><span class="dot" style="background:var(--navy)"></span><span class="name">Required</span><span class="desc">Students must use AI and document how.</span></label>
+          </div>
+          <div class="badge-option" data-key="permitted">
+            <input type="radio" name="status" id="status-permitted" value="Permitted">
+            <label for="status-permitted"><span class="dot" style="background:var(--green)"></span><span class="name">Permitted</span><span class="desc">AI allowed as a learning partner; student still does the thinking.</span></label>
+          </div>
+          <div class="badge-option" data-key="restricted">
+            <input type="radio" name="status" id="status-restricted" value="Restricted">
+            <label for="status-restricted"><span class="dot" style="background:var(--gold)"></span><span class="name">Restricted</span><span class="desc">Allowed only after a student attempt, for specific moves.</span></label>
+          </div>
+          <div class="badge-option" data-key="prohibited">
+            <input type="radio" name="status" id="status-prohibited" value="Prohibited">
+            <label for="status-prohibited"><span class="dot" style="background:var(--red)"></span><span class="name">Prohibited</span><span class="desc">No AI — this task builds a skill unaided.</span></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">3</span><h2>Why</h2><span class="req">Required</span>
+          <button type="button" class="template-btn" id="insertWhyBtn">Insert suggested wording</button>
+        </div>
+        <p class="card-sub">One or two sentences students will actually read.</p>
+        <textarea id="whyText" placeholder="This assignment is..."></textarea>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">4</span><h2>Course stage</h2></div>
+        <p class="card-sub">Where this assignment sits on the term's arc.</p>
+        <div class="pill-row" id="stageGroup">
+          <div class="pill-option"><input type="radio" name="stage" id="stage-foundational" value="Foundational — protect direct practice"><label for="stage-foundational">Foundational — protect direct practice</label></div>
+          <div class="pill-option"><input type="radio" name="stage" id="stage-intermediate" value="Intermediate — scaffolded, AI literacy taught explicitly"><label for="stage-intermediate">Intermediate — scaffolded, AI literacy taught explicitly</label></div>
+          <div class="pill-option"><input type="radio" name="stage" id="stage-advanced" value="Advanced / Capstone — professional orchestration expected"><label for="stage-advanced">Advanced / Capstone — professional orchestration expected</label></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">5</span><h2>The menu</h2></div>
+        <p class="card-sub">Danny Liu's Lane 2 concept: students pick and disclose specific allowed moves for <em>this</em> task, not a vague "AI is fine here." Needed if Status is <strong>Permitted</strong> or <strong>Restricted</strong>.</p>
+        <div class="menu-wrap" id="menuWrap">
+          <div class="check-grid" id="menuGroup">
+            <label class="check-option"><input type="checkbox" value="Brainstorming / idea generation"> Brainstorming / idea generation</label>
+            <label class="check-option"><input type="checkbox" value="Outlining / structuring"> Outlining / structuring</label>
+            <label class="check-option"><input type="checkbox" value="Drafting language (must be substantially revised)"> Drafting language (must be substantially revised)</label>
+            <label class="check-option"><input type="checkbox" value="Editing / proofreading"> Editing / proofreading</label>
+            <label class="check-option"><input type="checkbox" value="Data analysis or calculation checks"> Data analysis or calculation checks</label>
+            <label class="check-option"><input type="checkbox" value="Explaining a concept (not generating submitted content)"> Explaining a concept (not generating submitted content)</label>
+          </div>
+          <div class="other-row">
+            <label class="field-label" style="margin:0;" for="menuOther">Other</label>
+            <input type="text" id="menuOther" placeholder="Describe another allowed move">
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">6</span><h2>How much of the task may AI touch</h2></div>
+        <p class="card-sub">Optional — recommended when Status is <strong>Permitted</strong> or <strong>Required</strong>. Based on the AI Assessment Scale.</p>
+        <div class="level-wrap" id="levelWrap">
+          <div class="pill-row" id="levelGroup">
+            <div class="pill-option"><input type="radio" name="level" id="level-1" value="Level 1 — No AI"><label for="level-1">1 — No AI</label></div>
+            <div class="pill-option"><input type="radio" name="level" id="level-2" value="Level 2 — AI Planning"><label for="level-2">2 — AI Planning</label></div>
+            <div class="pill-option"><input type="radio" name="level" id="level-3" value="Level 3 — AI Collaboration"><label for="level-3">3 — AI Collaboration</label></div>
+            <div class="pill-option"><input type="radio" name="level" id="level-4" value="Level 4 — Full AI"><label for="level-4">4 — Full AI</label></div>
+            <div class="pill-option"><input type="radio" name="level" id="level-5" value="Level 5 — AI Exploration"><label for="level-5">5 — AI Exploration</label></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">7</span><h2>Conditions</h2></div>
+        <p class="card-sub">Check what students must do to comply.</p>
+        <div class="check-grid" id="conditionsGroup">
+          <label class="check-option"><input type="checkbox" value="Secured/unaided conditions (in-class, invigilated, oral defense)"> Secured/unaided conditions (in-class, invigilated, oral defense)</label>
+          <label class="check-option"><input type="checkbox" value="Must attach prompt history / AI chat log"> Must attach prompt history / AI chat log</label>
+          <label class="check-option"><input type="checkbox" value="Must cite AI-generated content"> Must cite AI-generated content <span id="citeFormatWrap" style="display:none;">(<input type="text" id="citeFormat" placeholder="format, e.g. MLA" style="width:7rem; display:inline-block; padding:0.15rem 0.4rem; font-size:0.78rem;">)</span></label>
+          <label class="check-option"><input type="checkbox" value="Must submit a short reflection on what AI got wrong and what changed"> Must submit a short reflection on what AI got wrong and what changed</label>
+          <label class="check-option"><input type="checkbox" value="Must be able to explain/defend the work without the AI output present"> Must be able to explain/defend the work without the AI output present</label>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">8</span><h2>Where this gets communicated</h2></div>
+        <p class="card-sub">Check every channel you'll actually use for this assignment.</p>
+        <div class="check-grid" id="commGroup">
+          <label class="check-option"><input type="checkbox" value="Syllabus (general policy)"> Syllabus (general policy)</label>
+          <label class="check-option"><input type="checkbox" value="This assignment sheet (specific rule)"> This assignment sheet (specific rule)</label>
+          <label class="check-option"><input type="checkbox" value="Verbally restated in class before the due date"> Verbally restated in class before the due date</label>
+          <label class="check-option"><input type="checkbox" value="LMS announcement"> LMS announcement</label>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-num">9</span><h2>Consequences of undisclosed AI use</h2></div>
+        <p class="card-sub">Point to your policy rather than restating it.</p>
+        <input type="text" id="policyPointer" placeholder="e.g., Academic Integrity Code, Section 3.2">
+      </section>
+
+      <div class="form-actions">
+        <button class="save-btn" id="saveBtn" type="button">Save to outline</button>
+        <button class="ghost-btn" id="cancelBtn" type="button">Cancel</button>
+        <button class="ghost-btn danger" id="deleteBtn" type="button" style="display:none;">Delete this assignment</button>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+    </main>
+
+    <!-- RIGHT: preview -->
+    <aside class="preview">
+      <div class="tabs">
+        <button id="tabCurrent" class="active" type="button">This assignment</button>
+        <button id="tabFull" type="button">Full outline</button>
+      </div>
+      <div class="preview-body" id="previewBody"></div>
+      <div class="preview-actions">
+        <button id="copyBtn" type="button">Copy text</button>
+        <button id="printBtn" type="button">Print / Save PDF</button>
+      </div>
+      <div class="copied-msg" id="copiedMsg"></div>
+    </aside>
+  </div>
+
+</div>
+
+<footer class="note">
+  Badge language and course-stage framing are drawn from "When to Let Students Use AI—and When to Say No" (Pitt UCTL); AI Assessment Scale levels from Perkins, Furze, Lodge &amp; Vasquez; and the Lane concept from Danny Liu's two-lane / menu approach (University of Sydney). Every course's outline is saved automatically in this view; use Export JSON for a portable backup covering all of them, or Import JSON to restore.
+</footer>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const STORAGE_KEY = 'ai-use-course-outline-v2';
+  const LEGACY_KEY = 'ai-use-course-outline-v1';
+
+  let state = { courses: [], currentCourseId: null };
+  let currentId = null; // null = new/unsaved assignment
+  let activeTab = 'current';
+  let storageOk = true;
+
+  const whyTemplates = {
+    Prohibited: "This task is prohibited because it builds a foundational skill directly, and AI would do that thinking for you.",
+    Restricted: "AI is restricted here because part of this task should be your own attempt first — AI may only help with specific, listed moves after that.",
+    Permitted: "AI is permitted because this task asks you to practice critically evaluating AI output, not just producing a clean final draft.",
+    Required: "AI is required here because this task mirrors how professionals orchestrate AI — your job is to direct, verify, and own the result.",
+  };
+
+  const statusColor = { Required: 'var(--navy)', Permitted: 'var(--green)', Restricted: 'var(--gold)', Prohibited: 'var(--red)' };
+
+  function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function makeCourse(name) { return { id: newId(), name: name || '', assignments: [] }; }
+
+  function getCurrentCourse() {
+    let course = state.courses.find(c => c.id === state.currentCourseId);
+    if (!course) {
+      course = state.courses[0];
+      if (course) state.currentCourseId = course.id;
+    }
+    return course || null;
+  }
+
+  function ensureAtLeastOneCourse() {
+    if (state.courses.length === 0) {
+      const c = makeCourse('');
+      state.courses.push(c);
+      state.currentCourseId = c.id;
+    }
+  }
+
+  // ---------- Persistence ----------
+  async function loadState() {
+    if (!window.storage || typeof window.storage.get !== 'function') {
+      storageOk = false;
+      ensureAtLeastOneCourse();
+      renderAll();
+      return;
+    }
+    try {
+      const result = await window.storage.get(STORAGE_KEY, false);
+      if (result && result.value) {
+        const parsed = JSON.parse(result.value);
+        if (Array.isArray(parsed.courses)) {
+          state = { courses: parsed.courses, currentCourseId: parsed.currentCourseId || (parsed.courses[0] && parsed.courses[0].id) || null };
+        }
+      } else {
+        await migrateLegacy();
+      }
+    } catch (e) {
+      // v2 key doesn't exist yet — check for pre-course-switching data to migrate
+      await migrateLegacy();
+    }
+    ensureAtLeastOneCourse();
+    renderAll();
+  }
+
+  async function migrateLegacy() {
+    try {
+      const legacy = await window.storage.get(LEGACY_KEY, false);
+      if (legacy && legacy.value) {
+        const parsed = JSON.parse(legacy.value);
+        if (Array.isArray(parsed.assignments)) {
+          const course = makeCourse(parsed.courseName || '');
+          course.assignments = parsed.assignments;
+          state = { courses: [course], currentCourseId: course.id };
+        }
+      }
+    } catch (e) {
+      // no legacy data either — fine, start fresh
+    }
+  }
+
+  async function persist() {
+    if (!storageOk) { setSaveStatus('Not saved — storage unavailable. Use Export JSON.', 'err'); return; }
+    try {
+      const ok = await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      if (ok) setSaveStatus('Saved just now.', 'ok');
+      else setSaveStatus('Save failed — try Export JSON as a backup.', 'err');
+    } catch (e) {
+      setSaveStatus('Save failed — try Export JSON as a backup.', 'err');
+    }
+  }
+
+  function setSaveStatus(msg, kind) {
+    const el = $('saveStatus');
+    el.textContent = msg;
+    el.className = 'save-status' + (kind ? ' ' + kind : '');
+    if (kind === 'ok') setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3000);
+  }
+
+  // ---------- Form <-> assignment object ----------
+  function getRadioValue(name) {
+    const el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : null;
+  }
+  function getCheckedValues(containerId) {
+    return Array.from(document.querySelectorAll('#' + containerId + ' input[type="checkbox"]:checked')).map(i => i.value);
+  }
+  function setRadioValue(name, value) {
+    document.querySelectorAll('input[name="' + name + '"]').forEach(i => { i.checked = (i.value === value); });
+  }
+  function setCheckedValues(containerId, values) {
+    const vals = values || [];
+    document.querySelectorAll('#' + containerId + ' input[type="checkbox"]').forEach(i => { i.checked = vals.includes(i.value); });
+  }
+
+  function readForm() {
+    const conditionsRaw = getCheckedValues('conditionsGroup');
+    return {
+      name: $('assignName').value.trim(),
+      lane: getRadioValue('lane'),
+      status: getRadioValue('status'),
+      why: $('whyText').value.trim(),
+      stage: getRadioValue('stage'),
+      menu: getCheckedValues('menuGroup'),
+      menuOther: $('menuOther').value.trim(),
+      level: getRadioValue('level'),
+      conditions: conditionsRaw,
+      citeFormat: $('citeFormat').value.trim(),
+      comms: getCheckedValues('commGroup'),
+      policy: $('policyPointer').value.trim(),
+    };
+  }
+
+  function clearForm() {
+    $('assignName').value = '';
+    $('whyText').value = '';
+    $('menuOther').value = '';
+    $('citeFormat').value = '';
+    $('policyPointer').value = '';
+    document.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
+    document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
+    $('citeFormatWrap').style.display = 'none';
+    currentId = null;
+    $('editingTag').innerHTML = 'Adding a new assignment';
+    $('deleteBtn').style.display = 'none';
+    toggleConditional();
+  }
+
+  function loadIntoForm(a) {
+    $('assignName').value = a.name || '';
+    setRadioValue('lane', a.lane);
+    setRadioValue('status', a.status);
+    $('whyText').value = a.why || '';
+    setRadioValue('stage', a.stage);
+    setCheckedValues('menuGroup', a.menu);
+    $('menuOther').value = a.menuOther || '';
+    setRadioValue('level', a.level);
+    setCheckedValues('conditionsGroup', a.conditions);
+    $('citeFormat').value = a.citeFormat || '';
+    $('citeFormatWrap').style.display = (a.conditions || []).includes('Must cite AI-generated content') ? 'inline' : 'none';
+    setCheckedValues('commGroup', a.comms);
+    $('policyPointer').value = a.policy || '';
+    currentId = a.id;
+    $('editingTag').innerHTML = 'Editing: <strong>' + escapeHtml(a.name || '(untitled)') + '</strong>';
+    $('deleteBtn').style.display = 'inline-block';
+    toggleConditional();
+  }
+
+  function toggleConditional() {
+    const status = getRadioValue('status');
+    $('menuWrap').classList.toggle('open', status === 'Permitted' || status === 'Restricted');
+    $('levelWrap').classList.toggle('open', status === 'Permitted' || status === 'Required');
+
+    const lane = getRadioValue('lane');
+    $('laneHint1').classList.toggle('show', lane === 'Lane 1 \u2014 Secure / Unaided');
+    $('laneHint2').classList.toggle('show', lane === 'Lane 2 \u2014 AI-Enabled');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ---------- List rendering ----------
+  function renderList() {
+    const course = getCurrentCourse();
+    const assignments = course ? course.assignments : [];
+    const wrap = $('assignList');
+    wrap.innerHTML = '';
+    $('listCount').textContent = assignments.length === 0
+      ? 'No assignments saved yet.'
+      : assignments.length + ' assignment' + (assignments.length === 1 ? '' : 's') + ' in this course';
+
+    if (assignments.length === 0) {
+      wrap.innerHTML = '<p class="empty-list">Fill in the form and click "Save to outline" to add your first assignment.</p>';
+      return;
+    }
+
+    assignments.forEach((a, idx) => {
+      const item = document.createElement('div');
+      item.className = 'assign-item' + (a.id === currentId ? ' active' : '');
+      const color = statusColor[a.status] || 'var(--ink-muted)';
+      item.innerHTML =
+        '<span class="name">' + escapeHtml(a.name || '(untitled)') + '</span>' +
+        '<span class="meta"><span class="dot" style="background:' + color + '"></span>' + escapeHtml(a.status || 'No status set') + '</span>' +
+        '<div class="row2">' +
+          '<div class="reorder">' +
+            '<button type="button" data-act="up" ' + (idx === 0 ? 'disabled style="opacity:0.3;"' : '') + '>\u25B2</button>' +
+            '<button type="button" data-act="down" ' + (idx === assignments.length - 1 ? 'disabled style="opacity:0.3;"' : '') + '>\u25BC</button>' +
+          '</div>' +
+          '<button type="button" class="del-btn" data-act="del">Delete</button>' +
+        '</div>';
+
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        loadIntoForm(a);
+        renderList();
+        renderPreview();
+      });
+      item.querySelector('[data-act="up"]').addEventListener('click', (e) => { e.stopPropagation(); moveAssignment(idx, -1); });
+      item.querySelector('[data-act="down"]').addEventListener('click', (e) => { e.stopPropagation(); moveAssignment(idx, 1); });
+      item.querySelector('[data-act="del"]').addEventListener('click', (e) => { e.stopPropagation(); deleteAssignment(a.id); });
+
+      wrap.appendChild(item);
+    });
+  }
+
+  function moveAssignment(idx, dir) {
+    const course = getCurrentCourse();
+    if (!course) return;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= course.assignments.length) return;
+    const arr = course.assignments;
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    persist();
+    renderList();
+    renderPreview();
+  }
+
+  function deleteAssignment(id) {
+    const course = getCurrentCourse();
+    if (!course) return;
+    const a = course.assignments.find(x => x.id === id);
+    if (!confirm('Delete "' + (a && a.name ? a.name : 'this assignment') + '" from the outline?')) return;
+    course.assignments = course.assignments.filter(x => x.id !== id);
+    if (currentId === id) clearForm();
+    persist();
+    renderList();
+    renderPreview();
+  }
+
+  // ---------- Save/Cancel/Delete (form actions) ----------
+  function saveCurrent() {
+    const course = getCurrentCourse();
+    if (!course) return;
+    const data = readForm();
+    if (!data.name) { setSaveStatus('Give this assignment a name before saving.', 'err'); $('assignName').focus(); return; }
+    if (!data.status) { setSaveStatus('Choose a Status badge before saving.', 'err'); return; }
+
+    if (currentId) {
+      const idx = course.assignments.findIndex(a => a.id === currentId);
+      if (idx !== -1) course.assignments[idx] = Object.assign({ id: currentId }, data);
+    } else {
+      const id = newId();
+      course.assignments.push(Object.assign({ id }, data));
+      currentId = id;
+      $('deleteBtn').style.display = 'inline-block';
+    }
+    $('editingTag').innerHTML = 'Editing: <strong>' + escapeHtml(data.name) + '</strong>';
+    persist();
+    renderList();
+    renderPreview();
+  }
+
+  // ---------- Course switching ----------
+  function renderCourseSelect() {
+    const sel = $('courseSelect');
+    sel.innerHTML = '';
+    state.courses.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name && c.name.trim() ? c.name : '(untitled course)';
+      if (c.id === state.currentCourseId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    $('deleteCourseBtn').style.display = state.courses.length > 1 ? 'inline-block' : 'none';
+  }
+
+  function switchCourse(id) {
+    state.currentCourseId = id;
+    currentId = null;
+    clearForm();
+    persist();
+    renderAll();
+  }
+
+  function addCourse() {
+    const c = makeCourse('');
+    state.courses.push(c);
+    state.currentCourseId = c.id;
+    currentId = null;
+    clearForm();
+    persist();
+    renderAll();
+    $('courseName').focus();
+  }
+
+  function renameCurrentCourse(newName) {
+    const course = getCurrentCourse();
+    if (!course) return;
+    course.name = newName;
+    persist();
+    renderCourseSelect();
+    renderPreview();
+  }
+
+  function deleteCurrentCourse() {
+    const course = getCurrentCourse();
+    if (!course) return;
+    if (state.courses.length <= 1) { setSaveStatus('At least one course has to stay \u2014 clear its assignments instead.', 'err'); return; }
+    if (!confirm('Delete the course "' + (course.name || '(untitled course)') + '" and all ' + course.assignments.length + ' of its saved assignment(s)? Export a backup first if you want to keep it.')) return;
+    state.courses = state.courses.filter(c => c.id !== course.id);
+    state.currentCourseId = state.courses[0].id;
+    currentId = null;
+    clearForm();
+    persist();
+    renderAll();
+  }
+
+  // ---------- Preview ----------
+  function assignmentText(a) {
+    let out = '';
+    out += 'AI USE — ' + (a.name || '[Assignment name]') + '\n';
+    if (a.lane) out += 'Lane: ' + a.lane + '\n';
+    out += 'Status: ' + (a.status || '[not set]') + '\n';
+    if (a.why) out += 'Why: ' + a.why + '\n';
+    if (a.stage) out += 'Course stage: ' + a.stage + '\n';
+    const menuRelevant = a.status === 'Permitted' || a.status === 'Restricted';
+    const levelRelevant = a.status === 'Permitted' || a.status === 'Required';
+    const menuAll = (a.menu || []).slice();
+    if (a.menuOther) menuAll.push(a.menuOther);
+    if (menuRelevant && menuAll.length) out += 'Allowed moves: ' + menuAll.join('; ') + '\n';
+    if (levelRelevant && a.level) out += 'AI Assessment Scale: ' + a.level + '\n';
+    const conditions = (a.conditions || []).map(c => {
+      if (c === 'Must cite AI-generated content' && a.citeFormat) return c + ' (' + a.citeFormat + ' format)';
+      return c;
+    });
+    if (conditions.length) { out += 'Conditions:\n'; conditions.forEach(c => out += '  \u2022 ' + c + '\n'); }
+    if (a.comms && a.comms.length) out += 'Communicated via: ' + a.comms.join('; ') + '\n';
+    if (a.policy) out += 'Policy reference: ' + a.policy + '\n';
+    return out.trim();
+  }
+
+  function renderPreview() {
+    $('tabCurrent').classList.toggle('active', activeTab === 'current');
+    $('tabFull').classList.toggle('active', activeTab === 'full');
+    const body = $('previewBody');
+
+    if (activeTab === 'current') {
+      const data = readForm();
+      const hasAnything = data.name || data.lane || data.status || data.why || data.stage || data.conditions.length || data.comms.length || data.policy;
+      body.textContent = hasAnything ? assignmentText(data) : 'Fill in the form \u2014 this summary builds itself as you go.';
+      body.classList.toggle('ph', !hasAnything);
+    } else {
+      const course = getCurrentCourse();
+      const assignments = course ? course.assignments : [];
+      if (assignments.length === 0) {
+        body.textContent = 'No assignments saved yet in this course. Save at least one to see the full outline here.';
+        body.classList.add('ph');
+      } else {
+        const courseName = course && course.name ? course.name : '(untitled course)';
+        let out = courseName + '\nAI USE — COURSE OUTLINE\n' + '='.repeat(30) + '\n\n';
+        assignments.forEach((a, i) => {
+          out += (i + 1) + '. ' + assignmentText(a) + '\n\n';
+        });
+        body.textContent = out.trim();
+        body.classList.remove('ph');
+      }
+    }
+  }
+
+  // ---------- Export / Import ----------
+  function exportJson() {
+    const course = getCurrentCourse();
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const label = state.courses.length > 1 ? 'all-courses' : ((course && course.name) || 'course-outline');
+    const safeName = label.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    a.href = url;
+    a.download = 'ai-use-outline-' + safeName + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (Array.isArray(parsed.courses)) {
+          // current export shape: one or more courses
+          state = { courses: parsed.courses, currentCourseId: parsed.currentCourseId || (parsed.courses[0] && parsed.courses[0].id) || null };
+        } else if (Array.isArray(parsed.assignments)) {
+          // legacy single-course shape
+          const c = makeCourse(parsed.courseName || '');
+          c.assignments = parsed.assignments;
+          state = { courses: [c], currentCourseId: c.id };
+        } else {
+          throw new Error('bad shape');
+        }
+        ensureAtLeastOneCourse();
+        currentId = null;
+        clearForm();
+        persist();
+        renderAll();
+        const total = state.courses.reduce((sum, c) => sum + c.assignments.length, 0);
+        setSaveStatus('Imported ' + state.courses.length + ' course(s), ' + total + ' assignment(s).', 'ok');
+      } catch (e) {
+        setSaveStatus('Could not read that file — is it an exported outline JSON?', 'err');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- Wire up ----------
+  function renderAll() {
+    const course = getCurrentCourse();
+    $('courseName').value = course ? course.name : '';
+    renderCourseSelect();
+    if (!storageOk) $('storageBanner').classList.add('show');
+    renderList();
+    renderPreview();
+  }
+
+  $('courseSelect').addEventListener('change', (e) => switchCourse(e.target.value));
+  $('addCourseBtn').addEventListener('click', addCourse);
+  $('deleteCourseBtn').addEventListener('click', deleteCurrentCourse);
+  $('courseName').addEventListener('input', () => renameCurrentCourse($('courseName').value));
+
+  document.querySelectorAll('#laneGroup input, #statusGroup input, #stageGroup input, #levelGroup input, #menuGroup input, #conditionsGroup input, #commGroup input, #whyText, #menuOther, #citeFormat, #policyPointer, #assignName')
+    .forEach(el => { el.addEventListener('input', () => { toggleConditional(); renderPreview(); }); el.addEventListener('change', () => { toggleConditional(); renderPreview(); }); });
+
+  document.querySelectorAll('#conditionsGroup input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.value === 'Must cite AI-generated content') $('citeFormatWrap').style.display = cb.checked ? 'inline' : 'none';
+    });
+  });
+
+  $('insertWhyBtn').addEventListener('click', () => {
+    const status = getRadioValue('status') || 'Permitted';
+    $('whyText').value = whyTemplates[status];
+    renderPreview();
+  });
+
+  $('addBtn').addEventListener('click', () => { clearForm(); renderList(); renderPreview(); });
+  $('saveBtn').addEventListener('click', saveCurrent);
+  $('cancelBtn').addEventListener('click', () => { clearForm(); renderList(); renderPreview(); });
+  $('deleteBtn').addEventListener('click', () => { if (currentId) deleteAssignment(currentId); });
+
+  $('tabCurrent').addEventListener('click', () => { activeTab = 'current'; renderPreview(); });
+  $('tabFull').addEventListener('click', () => { activeTab = 'full'; renderPreview(); });
+
+  $('copyBtn').addEventListener('click', async () => {
+    const text = $('previewBody').textContent;
+    try { await navigator.clipboard.writeText(text); $('copiedMsg').textContent = 'Copied to clipboard.'; }
+    catch (e) { $('copiedMsg').textContent = 'Could not copy automatically \u2014 select the text and copy manually.'; }
+    setTimeout(() => { $('copiedMsg').textContent = ''; }, 2500);
+  });
+  $('printBtn').addEventListener('click', () => window.print());
+
+  $('exportBtn').addEventListener('click', exportJson);
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', (e) => { if (e.target.files[0]) importJson(e.target.files[0]); e.target.value = ''; });
+
+  $('resetAllBtn').addEventListener('click', () => {
+    if (!confirm('Clear every course and every saved assignment in this file? Export a backup first if you want to keep any of it.')) return;
+    state = { courses: [], currentCourseId: null };
+    ensureAtLeastOneCourse();
+    currentId = null;
+    clearForm();
+    persist();
+    renderAll();
+  });
+
+  toggleConditional();
+  loadState();
+})();
+</script>
+</body>
+</html>
